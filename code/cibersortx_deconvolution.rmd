@@ -1,0 +1,101 @@
+```{r}
+library(zellkonverter)
+library(SingleCellExperiment)
+library(tidyverse)
+library(biomaRt)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+
+sce <- readH5AD(
+    "dbb5ad81-1713-4aee-8257-396fbabe7c6e.h5ad",
+    use_hdf5 = TRUE
+)
+
+
+metadata <- colData(sce) |>
+    as.data.frame() 
+
+
+metadata <- metadata |> 
+    dplyr::filter(tissue %in% c("lung")) |>
+    dplyr::filter(disease %in% c("normal", "COVID-19"))
+
+sce <- sce[, colnames(sce) %in% rownames(metadata)]
+
+# Filtrar: máximo 2000 células por tipo en ann_level_1
+set.seed(42)
+
+cells_to_keep <- colData(sce) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("cell_barcode") %>%
+    filter(ann_level_2 != "Unknown") |>
+    filter(ann_level_2 != "Hematopoietic stem cells") |>
+    filter(ann_level_2 != "Submucosal Gland") |>
+    filter(ann_level_2 != "Mesothelium") |>
+  group_by(disease, ann_level_2) %>%
+  slice_sample(prop = 1) %>%
+  slice_head(n = 500) %>% 
+  pull(cell_barcode)
+
+sce_filtered <- sce[, cells_to_keep]
+
+# Extraer matriz de conteos
+counts_matrix <- assay(sce_filtered, "X")
+
+celltype_vector <- sce_filtered$ann_level_2  # Ajusta el nombre de la columna
+names(celltype_vector) <- colnames(sce_filtered) # Asegura que los nombres sean IDs de célula
+disease <- sce_filtered$disease
+
+label_df <- data.frame(
+    Cell = names(celltype_vector),
+    Label = factor(paste0(celltype_vector, "_", disease))
+)
+
+rownames(label_df) <- NULL
+
+all(colnames(counts_matrix) %in% label_df$Cell)
+all(label_df$Cell %in% colnames(counts_matrix))
+
+scdata_sub <- as.matrix(counts_matrix)
+
+idx <- match(colnames(scdata_sub), label_df$Cell)
+
+scdata_renamed <- scdata_sub
+colnames(scdata_renamed) <- label_df$Label[idx]
+
+mat_out <- cbind(GeneSymbol = rownames(scdata_renamed), scdata_renamed)
+
+ens_ids <- mat_out[, "GeneSymbol"]
+
+ens_ids_clean <- sub("\\..*$", "", ens_ids)
+
+symbols <- mapIds(
+  org.Hs.eg.db,
+  keys = ens_ids_clean,
+  keytype = "ENSEMBL",
+  column = "SYMBOL",
+  multiVals = "first"
+)
+
+mat_out[, "GeneSymbol"] <- symbols
+
+mat_out_symbol <- mat_out[!is.na(mat_out[, "GeneSymbol"]), ]
+
+
+write.table(mat_out_symbol, file = "scdata_sub_lung_HLCA_ann2_covid_normal.txt",
+            sep = "\t", row.names = F, quote = FALSE, col.names = T)
+
+```
+
+```{bash}
+docker run \
+  -v ~:/src/data \
+  -v ~:/src/outdir \
+  cibersortx/fractions \
+  --username fernando.lucas@um.es \
+  --token [] \
+  --single_cell TRUE \
+  --refsample /src/data/scdata_sub_lung_HLCA_ann2.txt \
+  --mixture /src/data/all_genes.txt \
+  --rmbatchBmode TRUE 
+```
