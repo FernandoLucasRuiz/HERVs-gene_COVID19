@@ -150,7 +150,7 @@ ddsSalmon_import_GC  <- DESeqDataSetFromTximport(salmonCounts_GC,
 keep_v02_S_GC <- rowSums(counts(ddsSalmon_import_GC)>10) >= 18
 ddsSalmon_filtered_GC <- ddsSalmon_import_GC[keep_v02_S_GC,]
 
-saveRDS(ddsSalmon_filtered_GC,"../data/no_20E_RINadj/dds_DEG_filtered_GC.rds")
+saveRDS(ddsSalmon_filtered_GC,"../data/dds_DEG_filtered_GC.rds")
 
 patients_data_all_cov_RIN <- patients_data_all_cov_RIN |> 
     mutate(
