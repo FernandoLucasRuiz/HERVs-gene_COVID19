@@ -1,4 +1,4 @@
-# HERV activation in fatal COVID-19 lungs
+# HERV activation in COVID-19 lungs
 
 This repository contains the analysis code associated with the manuscript:
 
