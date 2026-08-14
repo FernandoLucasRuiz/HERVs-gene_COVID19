@@ -38,6 +38,12 @@ library(AnnotationDbi)
 library(SingleCellExperiment)
 library(zellkonverter)
 
+library(clusterProfiler)
+library(ReactomePA)
+library(enrichplot)
+library(ComplexUpset)
+library(corrplot)
+
 colores <- c(
     "#2A9D8F", "#264653",  "#8AB17D", "#E9C46A", "#F4A261",
     "#E76F51", "#F28482", "#9B5DE5", "#4E8098", "#577590",
