@@ -2,7 +2,7 @@
 
 This repository contains the analysis code associated with the manuscript:
 
-**Human endogenous retrovirus upregulation accompanies cellular and chromatin remodeling in severe COVID-19 lungs**
+**Human endogenous retrovirus expression tracks chromatin regulatory programs in severe COVID-19 lungs**
 
 Fernando Lucas-Ruiz, Azahara Maria Garcia Serna, Clara Salas, Angel Esteban, Kevin De Man, Yann Heylen, Wim Vanden Berghe, Alberto Baroja-Mazo, Pablo Pelegrin and Santiago Cuevas.
 
